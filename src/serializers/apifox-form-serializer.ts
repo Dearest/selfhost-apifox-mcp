@@ -1,5 +1,6 @@
 import type {
   ApifoxApiFullInput,
+  HttpMethod,
   FormValue,
   JsonObject,
   SerializedFormPayload,
@@ -43,6 +44,78 @@ const normalizeRequestBody = (requestBody: unknown): unknown => {
   }
 
   return copied;
+};
+
+type WriteMode = 'create' | 'update';
+
+export interface PreparePayloadOptions {
+  mode: WriteMode;
+  apiId?: number;
+}
+
+const supportedMethodSet = new Set<string>([
+  'get',
+  'post',
+  'put',
+  'patch',
+  'delete',
+  'head',
+  'options',
+]);
+
+const normalizeMethodForWrite = (method: unknown): HttpMethod => {
+  if (typeof method !== 'string') {
+    return 'get';
+  }
+
+  const normalized = method.trim().toLowerCase();
+  if (!supportedMethodSet.has(normalized)) {
+    return 'get';
+  }
+
+  return normalized as HttpMethod;
+};
+
+const withStringDefault = (value: unknown, fallback: string): string => {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  return value;
+};
+
+const withNumberDefault = (value: unknown, fallback: number): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return value;
+};
+
+export const prepareApiPayloadForWrite = (
+  payload: ApifoxApiFullInput,
+  options: PreparePayloadOptions,
+): ApifoxApiFullInput => {
+  const normalized: ApifoxApiFullInput = {
+    ...payload,
+    method: normalizeMethodForWrite(payload.method),
+    type: withStringDefault(payload.type, 'http'),
+    responseId: withNumberDefault(payload.responseId, 0),
+    oasExtensions: withStringDefault(payload.oasExtensions, ''),
+  };
+
+  if (options.mode === 'create') {
+    return {
+      ...normalized,
+      status: withStringDefault(payload.status, 'developing'),
+      visibility: withStringDefault(payload.visibility, 'INHERITED'),
+      serverId: withStringDefault(payload.serverId, ''),
+      responsibleId: withNumberDefault(payload.responsibleId, 0),
+    };
+  }
+
+  return {
+    ...normalized,
+    id: withNumberDefault(payload.id, withNumberDefault(options.apiId, 0)),
+  };
 };
 
 export const serializeApiPayloadForForm = (

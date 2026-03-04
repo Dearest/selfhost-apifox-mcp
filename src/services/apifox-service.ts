@@ -1,5 +1,8 @@
 import { normalizeApiDetail } from '../mappers/normalize-api-detail.js';
-import { serializeApiPayloadForForm } from '../serializers/apifox-form-serializer.js';
+import {
+  prepareApiPayloadForWrite,
+  serializeApiPayloadForForm,
+} from '../serializers/apifox-form-serializer.js';
 import type {
   ApifoxApiDetailRaw,
   ApifoxApiFullInput,
@@ -10,7 +13,7 @@ import type {
 
 export interface GetApiByPathInput {
   path: string;
-  method: string;
+  method?: string;
   strict?: boolean;
 }
 
@@ -124,17 +127,30 @@ export class ApifoxService {
   public async getApiByPath(input: GetApiByPathInput): Promise<GetApiByPathOutput> {
     const strict = input.strict ?? true;
     const list = await this.client.listApiDetails();
-    const targetMethod = input.method.toUpperCase();
+    const targetMethod =
+      typeof input.method === 'string' && input.method.trim().length > 0
+        ? input.method.trim().toUpperCase()
+        : null;
+    if (strict && targetMethod === null) {
+      throw new Error('method is required when strict=true');
+    }
     const targetPath = strict
       ? input.path
       : normalizePathForLooseMatch(input.path);
 
     const matched = list.filter((item) => {
-      const methodMatched = String(item.method).toUpperCase() === targetMethod;
       const pathValue = strict
         ? String(item.path)
         : normalizePathForLooseMatch(String(item.path));
-      return methodMatched && pathValue === targetPath;
+      if (pathValue !== targetPath) {
+        return false;
+      }
+
+      if (targetMethod === null) {
+        return true;
+      }
+
+      return String(item.method).toUpperCase() === targetMethod;
     });
 
     if (matched.length === 0) {
@@ -163,7 +179,10 @@ export class ApifoxService {
   }
 
   public async createApi(input: CreateApiInput): Promise<CreateApiOutput> {
-    const serialized = serializeApiPayloadForForm(input.payload);
+    const preparedPayload = prepareApiPayloadForWrite(input.payload, {
+      mode: 'create',
+    });
+    const serialized = serializeApiPayloadForForm(preparedPayload);
     const shouldExecute = shouldExecuteWrite(input.dryRun, input.confirm);
 
     if (!shouldExecute) {
@@ -172,22 +191,22 @@ export class ApifoxService {
         createdId: null,
         api: null,
         requestPreview: {
-          path: input.payload.path,
-          method: input.payload.method,
+          path: preparedPayload.path,
+          method: preparedPayload.method,
           serialized,
         },
       };
     }
 
-    const created = await this.client.createApi(input.payload);
+    const created = await this.client.createApi(preparedPayload);
 
     return {
       executed: true,
       createdId: created.id,
       api: normalizeApiDetail(created),
       requestPreview: {
-        path: input.payload.path,
-        method: input.payload.method,
+        path: preparedPayload.path,
+        method: preparedPayload.method,
         serialized,
       },
     };
@@ -195,7 +214,11 @@ export class ApifoxService {
 
   public async updateApi(input: UpdateApiInput): Promise<UpdateApiOutput> {
     const before = await this.client.getApiById(input.apiId);
-    const serialized = serializeApiPayloadForForm(input.payload);
+    const preparedPayload = prepareApiPayloadForWrite(input.payload, {
+      mode: 'update',
+      apiId: input.apiId,
+    });
+    const serialized = serializeApiPayloadForForm(preparedPayload);
     const shouldExecute = shouldExecuteWrite(input.dryRun, input.confirm);
 
     const diffKeys = topLevelDiffKeys(
@@ -211,24 +234,25 @@ export class ApifoxService {
           changedKeys: diffKeys,
         },
         requestPreview: {
-          path: input.payload.path,
-          method: input.payload.method,
+          path: preparedPayload.path,
+          method: preparedPayload.method,
           serialized,
         },
       };
     }
 
-    const updated = await this.client.updateApi(input.apiId, input.payload);
+    const updated = await this.client.updateApi(input.apiId, preparedPayload);
+    const effectiveUpdated = updated ?? (await this.client.getApiById(input.apiId));
 
     return {
       executed: true,
-      api: normalizeApiDetail(updated),
+      api: normalizeApiDetail(effectiveUpdated),
       diff: {
         changedKeys: diffKeys,
       },
       requestPreview: {
-        path: input.payload.path,
-        method: input.payload.method,
+        path: preparedPayload.path,
+        method: preparedPayload.method,
         serialized,
       },
     };

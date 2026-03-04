@@ -2,6 +2,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import type { LoginManagerLike } from '../auth/login.js';
 import {
+  prepareApiPayloadForWrite,
   serializeApiPayloadForForm,
   toFormUrlEncoded,
 } from '../serializers/apifox-form-serializer.js';
@@ -67,7 +68,10 @@ export class PrivateApifoxClient implements ApifoxClient {
   }
 
   public async createApi(payload: ApifoxApiFullInput): Promise<ApifoxApiDetailRaw> {
-    const serialized = serializeApiPayloadForForm(payload);
+    const payloadWithDefaults = prepareApiPayloadForWrite(payload, {
+      mode: 'create',
+    });
+    const serialized = serializeApiPayloadForForm(payloadWithDefaults);
     return this.requestWithAuth<ApifoxApiDetailRaw>((headers) => ({
       method: 'POST',
       url: `${this.options.baseUrl}/api/v1/api-details`,
@@ -82,9 +86,13 @@ export class PrivateApifoxClient implements ApifoxClient {
   public async updateApi(
     apiId: number,
     payload: ApifoxApiFullInput,
-  ): Promise<ApifoxApiDetailRaw> {
-    const serialized = serializeApiPayloadForForm(payload);
-    return this.requestWithAuth<ApifoxApiDetailRaw>((headers) => ({
+  ): Promise<ApifoxApiDetailRaw | null> {
+    const payloadWithDefaults = prepareApiPayloadForWrite(payload, {
+      mode: 'update',
+      apiId,
+    });
+    const serialized = serializeApiPayloadForForm(payloadWithDefaults);
+    return this.requestWithAuth<ApifoxApiDetailRaw | null>((headers) => ({
       method: 'PUT',
       url: `${this.options.baseUrl}/api/v1/api-details/${apiId}`,
       headers: {

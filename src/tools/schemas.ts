@@ -8,6 +8,13 @@ export const httpMethodSchema = z.enum([
   'DELETE',
   'HEAD',
   'OPTIONS',
+  'get',
+  'post',
+  'put',
+  'patch',
+  'delete',
+  'head',
+  'options',
 ]);
 
 const unknownRecordSchema = z.record(z.string(), z.unknown());
@@ -20,14 +27,20 @@ export const apifoxApiFullInputSchema = z
     folderId: z.int().optional(),
     deprecated: z.boolean().optional(),
     description: z.string().optional(),
-    parameters: z.array(unknownRecordSchema).optional(),
+    parameters: z
+      .union([z.array(unknownRecordSchema), unknownRecordSchema])
+      .optional(),
     requestBody: unknownRecordSchema.optional(),
     responses: z.array(unknownRecordSchema).optional(),
     responseChildren: z.array(unknownRecordSchema).optional(),
     responseExamples: z.array(unknownRecordSchema).optional(),
-    tags: z.array(z.string()).optional(),
-    commonResponseStatus: z.array(unknownRecordSchema).optional(),
-    commonParameters: z.array(unknownRecordSchema).optional(),
+    tags: z.union([z.array(z.string()), z.string()]).optional(),
+    commonResponseStatus: z
+      .union([z.array(unknownRecordSchema), unknownRecordSchema])
+      .optional(),
+    commonParameters: z
+      .union([z.array(unknownRecordSchema), unknownRecordSchema])
+      .optional(),
     auth: unknownRecordSchema.optional(),
     securityScheme: unknownRecordSchema.optional(),
     advancedSettings: unknownRecordSchema.optional(),

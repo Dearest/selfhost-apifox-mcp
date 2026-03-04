@@ -5,18 +5,36 @@ export type HttpMethod =
   | 'PATCH'
   | 'DELETE'
   | 'HEAD'
-  | 'OPTIONS';
+  | 'OPTIONS'
+  | 'get'
+  | 'post'
+  | 'put'
+  | 'patch'
+  | 'delete'
+  | 'head'
+  | 'options';
 
 export type JsonObject = Record<string, unknown>;
 
 export interface ApifoxParameter {
   name: string;
-  in: 'query' | 'path' | 'header' | 'cookie' | 'body';
+  in?: 'query' | 'path' | 'header' | 'cookie' | 'body';
   required?: boolean;
   description?: string;
   schema?: JsonObject;
   [key: string]: unknown;
 }
+
+export interface ApifoxParameterGroups {
+  query?: ApifoxParameter[];
+  path?: ApifoxParameter[];
+  header?: ApifoxParameter[];
+  cookie?: ApifoxParameter[];
+  body?: ApifoxParameter[];
+  [key: string]: unknown;
+}
+
+export type ApifoxParametersRaw = ApifoxParameter[] | ApifoxParameterGroups;
 
 export interface ApifoxRequestBodyRaw {
   contentType?: string;
@@ -25,7 +43,8 @@ export interface ApifoxRequestBodyRaw {
 }
 
 export interface ApifoxResponseRaw {
-  statusCode: number | string;
+  statusCode?: number | string;
+  code?: number | string;
   name?: string;
   description?: string;
   jsonSchema?: JsonObject;
@@ -38,7 +57,7 @@ export interface ApifoxApiDetailRaw extends JsonObject {
   path: string;
   method: string;
   description?: string;
-  parameters?: ApifoxParameter[] | string;
+  parameters?: ApifoxParametersRaw | string;
   requestBody?: ApifoxRequestBodyRaw | string;
   responses?: ApifoxResponseRaw[] | string;
   tags?: string[] | string;
@@ -52,14 +71,14 @@ export interface ApifoxApiFullInput extends JsonObject {
   folderId?: number;
   deprecated?: boolean;
   description?: string;
-  parameters?: ApifoxParameter[];
+  parameters?: ApifoxParametersRaw;
   requestBody?: ApifoxRequestBodyRaw;
   responses?: ApifoxResponseRaw[];
   responseChildren?: JsonObject[];
   responseExamples?: JsonObject[];
-  tags?: string[];
-  commonResponseStatus?: JsonObject[];
-  commonParameters?: JsonObject[];
+  tags?: string[] | string;
+  commonResponseStatus?: JsonObject | JsonObject[];
+  commonParameters?: JsonObject | JsonObject[];
   auth?: JsonObject;
   securityScheme?: JsonObject;
   advancedSettings?: JsonObject;
@@ -113,5 +132,8 @@ export interface ApifoxClient {
   getApiById(apiId: number): Promise<ApifoxApiDetailRaw>;
   listApiDetails(): Promise<ApifoxApiDetailRaw[]>;
   createApi(payload: ApifoxApiFullInput): Promise<ApifoxApiDetailRaw>;
-  updateApi(apiId: number, payload: ApifoxApiFullInput): Promise<ApifoxApiDetailRaw>;
+  updateApi(
+    apiId: number,
+    payload: ApifoxApiFullInput,
+  ): Promise<ApifoxApiDetailRaw | null>;
 }
