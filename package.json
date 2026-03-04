@@ -1,17 +1,28 @@
 {
-  "name": "apifox-mcp",
+  "name": "selfhost-apifox-mcp",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Apifox private deployment MCP server",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "bin": {
+    "selfhost-apifox-mcp": "dist/src/index.js"
+  },
+  "files": [
+    "dist/src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc --noEmit",
     "dev": "tsx src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm check && pnpm test && pnpm build"
   },
   "keywords": [
     "mcp",

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import axios from 'axios';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -39,7 +40,7 @@ const bootstrap = async (): Promise<void> => {
   const service = new ApifoxService(client);
 
   const server = new McpServer({
-    name: 'apifox-private-mcp-server',
+    name: 'selfhost-apifox-mcp',
     version: '0.1.0',
   });
 
@@ -48,11 +49,11 @@ const bootstrap = async (): Promise<void> => {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.error('apifox-private-mcp-server started');
+  console.error('selfhost-apifox-mcp started');
 };
 
 bootstrap().catch((error: unknown) => {
   const message = error instanceof Error ? error.stack ?? error.message : String(error);
-  console.error(`apifox-private-mcp-server failed: ${message}`);
+  console.error(`selfhost-apifox-mcp failed: ${message}`);
   process.exit(1);
 });

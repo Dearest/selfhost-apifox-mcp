@@ -1,4 +1,4 @@
-# apifox-mcp
+# selfhost-apifox-mcp
 
 基于 TypeScript + MCP SDK 的 Apifox MCP Server（`stdio`）。
 
@@ -21,13 +21,7 @@
 
 ### Using stdio Transport (Default)
 
-以下配置方式适用于本地被宿主进程拉起的 MCP（Cursor / Claude Desktop / Claude Code）。
-
-先确定你本机绝对路径（示例）：
-
-```bash
-/Users/you/work/apifox-mcp/dist/index.js
-```
+以下配置方式适用于本地被宿主进程拉起的 MCP（Cursor / Claude Desktop / Claude Code），统一使用 `npx` 启动 npm 包。
 
 ### Cursor 配置
 
@@ -41,9 +35,9 @@ Cursor 官方文档支持项目级和全局级 MCP 配置：
 ```json
 {
   "mcpServers": {
-    "apifox-mcp": {
-      "command": "node",
-      "args": ["/Users/you/work/apifox-mcp/dist/src/index.js"],
+    "selfhost-apifox-mcp": {
+      "command": "npx",
+      "args": ["-y", "selfhost-apifox-mcp@latest"],
       "env": {
         "APIFOX_BASE_URL": "{your-apifox-base-url}",
         "APIFOX_PROJECT_ID": "{your-apifox-project-id}",
@@ -60,13 +54,34 @@ Cursor 官方文档支持项目级和全局级 MCP 配置：
 Claude Code 官方支持命令行直接添加 MCP。
 
 ```bash
-claude mcp add apifox-mcp \
+claude mcp add selfhost-apifox-mcp \
   --transport stdio \
   --env APIFOX_BASE_URL={your-apifox-base-url} \
   --env APIFOX_PROJECT_ID={your-apifox-project-id} \
   --env APIFOX_EMAIL={your-apifox-email} \
   --env APIFOX_PASSWORD={your-apifox-password} \
-  -- node /Users/you/work/apifox-mcp/dist/src/index.js
+  -- npx -y selfhost-apifox-mcp@latest
+```
+
+### Claude Desktop 配置
+
+`claude_desktop_config.json` 示例：
+
+```json
+{
+  "mcpServers": {
+    "selfhost-apifox-mcp": {
+      "command": "npx",
+      "args": ["-y", "selfhost-apifox-mcp@latest"],
+      "env": {
+        "APIFOX_BASE_URL": "{your-apifox-base-url}",
+        "APIFOX_PROJECT_ID": "{your-apifox-project-id}",
+        "APIFOX_EMAIL": "{your-apifox-email}",
+        "APIFOX_PASSWORD": "{your-apifox-password}"
+      }
+    }
+  }
+}
 ```
 
 ### 支持的环境变量参数
@@ -84,8 +99,8 @@ claude mcp add apifox-mcp \
 ## 本地开发
 
 ```bash
-git clone https://github.com/Dearest/apifox-mcp.git
-cd apifox-mcp
+git clone https://github.com/Dearest/selfhost-apifox-mcp.git
+cd selfhost-apifox-mcp
 pnpm install
 pnpm build
 ```
