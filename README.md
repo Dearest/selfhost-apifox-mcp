@@ -9,14 +9,6 @@
 3. `create_api`：创建 API（默认 `dry-run`）。
 4. `update_api`：全量对象更新 API（默认 `dry-run`）。
 
-## 约束与设计
-
-1. 仅私有接口适配器（不走官方 OpenAPI adapter）。
-2. 鉴权使用邮箱密码自动登录。
-   说明：环境变量名仍是 `APIFOX_EMAIL`，但登录请求体发送 `account + password`。
-3. 默认分支 `APIFOX_BRANCH_ID=0`，支持覆盖。
-4. MCP 仅 `stdio` 传输。
-
 ## MCP Server
 
 ### Using stdio Transport (Default)
@@ -95,6 +87,11 @@ claude mcp add selfhost-apifox-mcp \
 - APIFOX_CLIENT_VERSION: Apifox 客户端版本（可选，默认 `2.7.2`）
 - APIFOX_CLIENT_MODE: Apifox 客户端模式（可选，默认 `web`）
 - APIFOX_LOGIN_USE_LDAP: Apifox 登录使用 LDAP（可选，默认 `false`）
+
+## 设计
+
+1. 仅私有接口适配器（不走官方 OpenAPI adapter）。
+2. 鉴权使用邮箱密码自动登录。
 
 ## 本地开发
 
